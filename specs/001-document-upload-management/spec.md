@@ -95,24 +95,27 @@ As an employee, I want to attach documents from task pages and see recent upload
 - **FR-003**: System MUST enforce max file size of 25 MB per file; reject and show clear error if exceeded.
 - **FR-004**: System MUST store files outside `wwwroot` in local storage with unique path `userId/projectId|personal/guid.ext`.
 - **FR-005**: System MUST record metadata: title, description, category, project, tags, upload date/time, uploader, size, MIME type, storage path.
-- **FR-006**: System MUST validate extension whitelist and scan for malware before persisting file.
-- **FR-007**: System MUST allow document owners to edit metadata and replace file content, with audit trail entry.
-- **FR-008**: System MUST allow delete actions for owner and project managers; delete removes both DB record and file from disk.
-- **FR-009**: System MUST return lists of accessible documents filtered by role and project membership; unauthorized rows must not be exposed.
-- **FR-010**: System MUST support search over title/description/tags/uploader/project and return results <2 seconds.
-- **FR-011**: System MUST provide document preview for PDF and images.
-- **FR-012**: System MUST support sharing documents with users/teams; shared docs appear in "Shared with Me" and send in-app notifications.
-- **FR-013**: System MUST offer project documents view with all project members able to access project docs.
-- **FR-014**: System MUST enable attaching documents to tasks and automatically link to task project.
-- **FR-015**: System MUST add dashboard recent documents widget and document count summary.
-- **FR-016**: System MUST log activity events for uploads/downloads/deletes/shares for audit reporting.
-- **FR-017**: System MUST enforce authorization in file download endpoint and service layer to prevent IDOR.
-- **FR-018**: System MUST support a pluggable `IFileStorageService` interface for local and future Azure implementations.
-- **FR-019**: System MUST handle errors gracefully with user-friendly messages and not expose stack traces.
+- **FR-006**: System MUST queue uploaded files for asynchronous virus scanning using Azure Functions with Queue Storage triggers.
+- **FR-007**: System MUST track scan status (PendingScan, Scanning, Clean, Infected, ScanFailed) and prevent access to unscanned or infected files.
+- **FR-008**: System MUST notify users when scan completes with clean or infected results.
+- **FR-009**: System MUST allow document owners to edit metadata and replace file content, with audit trail entry.
+- **FR-010**: System MUST allow delete actions for owner and project managers; delete removes both DB record and file from disk.
+- **FR-011**: System MUST return lists of accessible documents filtered by role and project membership; unauthorized rows must not be exposed.
+- **FR-012**: System MUST support search over title/description/tags/uploader/project and return results <2 seconds.
+- **FR-013**: System MUST provide document preview for PDF and images only after scan completion.
+- **FR-014**: System MUST support sharing documents with users/teams; shared docs appear in "Shared with Me" and send in-app notifications.
+- **FR-015**: System MUST offer project documents view with all project members able to access project docs.
+- **FR-016**: System MUST enable attaching documents to tasks and automatically link to task project.
+- **FR-017**: System MUST add dashboard recent documents widget and document count summary.
+- **FR-018**: System MUST log activity events for uploads/downloads/deletes/shares for audit reporting.
+- **FR-019**: System MUST enforce authorization in file download endpoint and service layer to prevent IDOR.
+- **FR-020**: System MUST support a pluggable `IFileStorageService` interface for local and future Azure implementations.
+- **FR-021**: System MUST support `IQueueService` interface for background processing with Azure Queue Storage implementation.
+- **FR-022**: System MUST handle errors gracefully with user-friendly messages and not expose stack traces.
 
 ### Key Entities
 
-- **Document**: Represents uploaded file metadata, including DocumentId, Title, Description, Category, ProjectId (nullable), Tags, UploadedByUserId, UploadDateTime, FileSize, FileType, FilePath, StorageName.
+- **Document**: Represents uploaded file metadata, including DocumentId, Title, Description, Category, ProjectId (nullable), Tags, UploadedByUserId, UploadDateTime, FileSize, FileType, FilePath, ScanStatus, ScanDateTime, ScanResult, StorageName.
 - **DocumentShare**: Tracks sharing relationships with UserId/TeamId, DocumentId, SharedByUserId, SharedOn.
 - **DocumentTaskLink**: Associates documents with tasks (TaskId, DocumentId).
 
@@ -120,13 +123,15 @@ As an employee, I want to attach documents from task pages and see recent upload
 
 ### Measurable Outcomes
 
-- **SC-001**: 95% of single-document uploads up to 25 MB complete within 30 seconds.
-- **SC-002**: "My Documents" list and project document list page load within 2 seconds for 500 documents.
-- **SC-003**: Search queries return results within 2 seconds in 95th percentile.
-- **SC-004**: Document preview (PDF/image) renders within 3 seconds in 90th percentile.
-- **SC-005**: 0 critical security incidents (unauthorized access) in launch verification tests.
-- **SC-006**: 70% adoption of document upload by active users in first 3 months (integration metric from stakeholder success metrics).
-- **SC-007**: 90% of uploaded documents include valid category and title metadata.
+- **SC-001**: 95% of upload requests initiate within 5 seconds and return document ID with "PendingScan" status.
+- **SC-002**: 95% of virus scans complete within 60 seconds for files up to 25 MB.
+- **SC-003**: "My Documents" list and project document list page load within 2 seconds for 500 documents.
+- **SC-004**: Search queries return results within 2 seconds in 95th percentile.
+- **SC-005**: Document preview (PDF/image) renders within 3 seconds in 90th percentile for clean documents.
+- **SC-006**: 0 critical security incidents (unauthorized access or infected file downloads) in launch verification tests.
+- **SC-007**: 70% adoption of document upload by active users in first 3 months (integration metric from stakeholder success metrics).
+- **SC-008**: 90% of uploaded documents include valid category and title metadata.
+- **SC-009**: 99% of clean documents are available for download/preview within 2 minutes of upload completion.
 
 ### Qualitative Criteria
 
@@ -136,8 +141,10 @@ As an employee, I want to attach documents from task pages and see recent upload
 
 ## Assumptions
 
-- Malware scanning can be mocked for training and should be available as a pluggable service.
-- No external cloud storage dependencies are required for MVP; local filesystem is sufficient.
+- Azure Functions runtime and Azure Storage (Queue + Blob) are available for background processing.
+- Virus scanning can be implemented using Windows Defender API or third-party scanning service in Azure Functions.
+- Queue Storage provides reliable message delivery for scan requests.
+- Local development can use Azurite for Azure Storage emulation.
 - Existing authentication and role claims are already present and enforced by current app architecture.
 - The system includes existing user/project relationship checks from current project membership services.
 - The app environment has accessible `AppData/uploads` or equivalent local path with write permissions.
@@ -152,6 +159,9 @@ As an employee, I want to attach documents from task pages and see recent upload
 
 ## Clarifications
 
-- Document-level malware scanning implementation may be simulated with a service that always returns clean in training mode.
+- Document upload is asynchronous: files are stored immediately but marked "PendingScan" until Azure Functions completes virus scanning.
+- Virus scanning implementation in Azure Functions may use Windows Defender API, ClamAV, or third-party services.
+- Failed scans (ScanFailed status) may require manual admin review before documents become accessible.
 - "Shared with Me" UI may be implemented in the user documents area as a tab or filter set.
+- Queue messages include document ID and storage path for processing by Azure Functions.
 
