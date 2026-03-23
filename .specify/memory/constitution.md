@@ -1,50 +1,77 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- 
+=================================================================
+SYNC IMPACT REPORT – Constitution v1.0.0
+=================================================================
+
+**Version Change**: Initial creation (v1.0.0)
+**Bump Rationale**: First formal constitution for ContosoDashboard training project
+
+**Modified Principles**: None (initial version)
+**Added Sections**: 
+  - I. Training-First Architecture
+  - II. Transparent Implementation Patterns
+  - III. Real-World Constraints with Safety Nets
+  - IV. Service-Layer Security Architecture
+  - V. Observable & Debuggable Code
+  - Governance section with amendment procedure
+
+**Removed Sections**: None
+
+**Templates Status**:
+  ✅ .specify/templates/plan-template.md – No changes needed
+    (Already includes "Constitution Check" gate that will use principles)
+  ✅ .specify/templates/spec-template.md – No changes needed
+    (Supports user story prioritization aligned with transparent implementation)
+  ✅ .specify/templates/tasks-template.md – No changes needed
+    (Organizes tasks by story for independent delivery aligned with principle II)
+  ✅ README.md – No changes needed
+    (Existing "Architecture Principles" already reflect training focus)
+
+**Files Flagged for Manual Review**: None
+
+**Deferred TODOs**: None
+
+=================================================================
+-->
+
+# ContosoDashboard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Training-First Architecture
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Every design decision prioritizes learning value for developers studying Spec-Driven Development (SDD) and clean architecture patterns. Code MUST be intentionally simple, well-documented, and serve as a reference implementation. Complexity is justified ONLY when it demonstrates a specific architectural pattern. Production hardening is explicitly NOT required; clarity and educational value supersede performance optimization.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Transparent Implementation Patterns
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+All features demonstrate clear patterns that trainees can study and replicate. Data flow, service organization, security implementation, and state management MUST be observable and traceable. Comments explain the "why" behind architectural choices. No hidden utilities or magic—common patterns are explicit and discoverable.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Real-World Constraints with Safety Nets
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Implementation follows ASP.NET Core and Blazor best practices while acknowledging training limitations. Mock systems (authentication, data persistence) simulate production patterns safely. Service-level authorization prevents IDOR vulnerabilities. Role-based access control demonstrates proper gating. When production patterns cannot be fully implemented, the limitation is documented with guidance for production migration.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Service-Layer Security Architecture
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Security implementation MUST occur at the service layer (business logic), never relying solely on page-level authorization. Every service method validates user claims and enforces role-based access control independently. Cross-cutting concerns like IDOR protection are explicit in code. Tests verify that direct service calls (bypassing UI) still enforce proper authorization. This pattern demonstrates defense-in-depth security design.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Observable & Debuggable Code
+
+Code flow MUST be traceable without external instrumentation or debugging tools. Structured logging of state transitions, user actions, and decision points is required. Data relationships are explicit and visible through clear model definitions and referential integrity. Comments explain non-obvious business logic. Console output and logs provide sufficient information for trainees to understand "what happened and why" without stepping through a debugger.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Amendment Procedure**: Constitution amendments require:
+1. Proposed change documented with rationale
+2. Assessment of impact on existing features and templates
+3. Version bump according to semantic rules (MAJOR=principle redefinition, MINOR=new principle, PATCH=wording clarification)
+4. Update to `.specify/` templates to maintain consistency
+5. Documentation of migration path for affected features
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Compliance Verification**: All code reviews MUST verify that pull requests align with stated principles. Deviations require explicit justification and exception documentation.
+
+**Version Semantics**: MAJOR.MINOR.PATCH format.
+- MAJOR: Principle removed or fundamentally redefined
+- MINOR: New principle added or existing principle expanded
+- PATCH: Wording clarifications or non-semantic refinements
+
+**Version**: 1.0.0 | **Ratified**: 2026-03-23 | **Last Amended**: 2026-03-23
